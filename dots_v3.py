@@ -328,9 +328,6 @@ for thisSF in sf_range:
             dotendIndex -= dotSteps # take away
             trialCount += 1
 
+core.quit()
 winA.close()
 winB.close()
-core.quit()
-
-
-
