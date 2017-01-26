@@ -14,6 +14,7 @@ wd = os.getcwd()
 
 # f_Size = 600
 
+# not sure what f_size was??
 
 ## -- ## Set Options ##--##
 
