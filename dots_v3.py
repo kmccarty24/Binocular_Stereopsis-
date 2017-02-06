@@ -14,19 +14,18 @@ wd = os.getcwd()
 
 # f_Size = 600
 
-# not sure what f_size was??
-
+ 
 ## -- ## Set Options ##--##
 
 info = {}
 info['Units'] = ['pix', 'norm' 'deg', 'height', 'cm']
-info['Max Dots'] = 1000
-info['dotSteps'] = 5
+info['Max Dots'] = 5000
+info['dotSteps'] = 100
 dlg = gui.DlgFromDict(info) #dialog box
 if not dlg.OK: #did they push ok?
     core.quit()
 
-radius = 300
+#radius = 100
 dotSize = 5
 dotSteps = info['dotSteps']
 
@@ -56,7 +55,7 @@ elif info['Units'] == 'norm': #Cycles Per Stimulus
 elif info['Units'] == 'cm': #Cycles Per stimulus
     sf_range = [x for x in range(1,100)]
 
-
+print radius, 'RADIUS'
 ## -- ## Nuts and Bolts ##--##
 
 # ioHub
@@ -77,19 +76,19 @@ print right_display.getIndex()
 # Windows 
 
 winA = visual.Window(
-        monitor = 'LeftMonitor',
-        size = (1024,768), #left_display.getPixelResolution(),
+        monitor = 'LeftDisplay',
+        size = (1280,1024), #left_display.getPixelResolution(),
         units = info['Units'], 
-        fullscr = False,
+        fullscr = True,
         screen = 1, #(left_display.getIndex()- 1)
-        color = (-.75,-.75,-.75))
+        color = (0,0,0))
 
 winB = visual.Window(
-        monitor = 'RightMonitor',
-        size = (1024,768), #right_display.getPixelResolution(),
+        monitor = 'RightDisplay',
+        size = (1280,1024), #right_display.getPixelResolution(),
         units = info['Units'],
-        fullscr = False,
-        screen = 2, #right_display.getIndex()
+        fullscr = True,
+        screen = 0, #right_display.getIndex()
         color = (0,0,0))
 
 # Set the mouse visibility to False BECASUE ITS ANNOYING
@@ -122,7 +121,7 @@ fix_R = visual.Circle(winB,
 
     # pos=(x_cent +x_off, y_cent)
 
-def dot_coords(maxDots = 1000, radius = 300):
+def dot_coords(maxDots = 1000, radius = radius):
 
     rad = radius
     t = np.random.uniform(0.0, 2.0*np.pi, maxDots) # Angle between 0 and 2Pi (in radians)
@@ -173,7 +172,7 @@ def displayInstructions(text, acceptedKeys= None):
 
 # SF Report
 
-sf_Val = visual.TextStim(winB, text = '', pos = [300,-300])
+sf_Val = visual.TextStim(winB, text = '', pos = [550,-400])
 
 # Gratings to be placed on top of the circles
 
@@ -184,20 +183,20 @@ grate_L = visual.GratingStim(winA,
                             size= radius*2, 
                             sf=1, # Dont need to change this
                             #pos = (x_cent -x_off, y_cent),
-                            contrast = 0.75, #Chosen 0.25
+                            contrast = 0.25, #Chosen 0.25
                             color= (1,1,1),
                             colorSpace = 'rgb',
                             units = info['Units'],
                             autoLog=False)
     
 grate_R = visual.GratingStim(winB, 
-                            ori=45,
+                            ori=-45,
                             tex ='sin',
                             mask = 'circle', 
                             size=radius*2, 
                             sf=1, # Dont need to change this
                             #pos = (x_cent -x_off, y_cent),
-                            contrast = 0.75, #Chosen 0.25
+                            contrast = 0.25, #Chosen 0.25
                             color= (1,1,1),
                             colorSpace = 'rgb',
                             units = info['Units'],
@@ -249,8 +248,8 @@ for thisSF in sf_range:
 
     grate_L.sf = sf
     grate_R.sf = sf
-    grate_L.setOri(l_o)
-    grate_R.setOri(r_o)
+#    grate_L.setOri(l_o)
+#    grate_R.setOri(r_o)
 
     # Allow dots to be Drawn
 
@@ -328,6 +327,9 @@ for thisSF in sf_range:
             dotendIndex -= dotSteps # take away
             trialCount += 1
 
-core.quit()
 winA.close()
 winB.close()
+core.quit()
+
+
+
