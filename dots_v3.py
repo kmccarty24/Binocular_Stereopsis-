@@ -21,39 +21,22 @@ info = {}
 info['Units'] = ['pix', 'norm' 'deg', 'height', 'cm']
 info['Max Dots'] = 5000
 info['dotSteps'] = 100
+info['Element Mask'] = ['circle', 'gauss']
 dlg = gui.DlgFromDict(info) #dialog box
 if not dlg.OK: #did they push ok?
     core.quit()
 
-#radius = 100
+radius = 300
 dotSize = 5
 dotSteps = info['dotSteps']
+maxDots = info['Max Dots']
 
 ## -- ## Spatial Frequency ##--##
 
 # Set correct units
-if info['Units'] == 'pix': # Cycles per pixel
-    sf_range = np.ndarray.tolist(pl.frange(0.001,0.2,0.005)) # generates a list from an array of floats
-    # 0.001 = 1 cycle in every 100 pixels - 1% 
-    # 0.2 = 1 cycle every 5 pixels - 20%?
-    radius = 300
-    dotSize = 5
-    dotSteps = 5
-
-elif info['Units'] == 'deg': #cycles per degree of visual angle
-    sf_range = [x for x in range(1,100)]
-    radius = 300
-    dotSize = 5
-    dotSteps = 5
-
-elif info['Units'] == 'height': # Cycles Per Stimulus
-    sf_range = [x for x in range(1,50)]
-
-elif info['Units'] == 'norm': #Cycles Per Stimulus
-    sf_range = [x for x in range(1,100)]
-
-elif info['Units'] == 'cm': #Cycles Per stimulus
-    sf_range = [x for x in range(1,100)]
+sf_range = np.ndarray.tolist(pl.frange(0.001,0.2,0.005)) # generates a list from an array of floats
+# 0.001 = 1 cycle in every 100 pixels - 1% 
+# 0.2 = 1 cycle every 5 pixels - 20%?
 
 print radius, 'RADIUS'
 ## -- ## Nuts and Bolts ##--##
@@ -79,16 +62,16 @@ winA = visual.Window(
         monitor = 'LeftDisplay',
         size = (1280,1024), #left_display.getPixelResolution(),
         units = info['Units'], 
-        fullscr = True,
-        screen = 1, #(left_display.getIndex()- 1)
+        fullscr = False,
+        screen = 1, #(left_display.getIndex()- 1) current set 1
         color = (0,0,0))
 
 winB = visual.Window(
         monitor = 'RightDisplay',
         size = (1280,1024), #right_display.getPixelResolution(),
         units = info['Units'],
-        fullscr = True,
-        screen = 0, #right_display.getIndex()
+        fullscr = False,
+        screen = 2, #right_display.getIndex() current set 0
         color = (0,0,0))
 
 # Set the mouse visibility to False BECASUE ITS ANNOYING
@@ -179,7 +162,7 @@ sf_Val = visual.TextStim(winB, text = '', pos = [550,-400])
 grate_L = visual.GratingStim(winA, 
                             ori=45,
                             tex ='sin',
-                            mask = 'circle', 
+                            mask = info['Element Mask'], 
                             size= radius*2, 
                             sf=1, # Dont need to change this
                             #pos = (x_cent -x_off, y_cent),
@@ -192,7 +175,7 @@ grate_L = visual.GratingStim(winA,
 grate_R = visual.GratingStim(winB, 
                             ori=-45,
                             tex ='sin',
-                            mask = 'circle', 
+                            mask = info['Element Mask'], 
                             size=radius*2, 
                             sf=1, # Dont need to change this
                             #pos = (x_cent -x_off, y_cent),
@@ -215,10 +198,10 @@ winA.flip()
 winB.flip()
 
 # Now prepare the random dot coordinates
-dots = dot_coords()
+dots = dot_coords(maxDots = maxDots)
 shuffle(dots)
 
-color_lists = dot_colors()
+color_lists = dot_colors(maxDots = maxDots)
 
 # Display Instructions
 instruct = 'Press Space To Continue'
@@ -259,16 +242,12 @@ for thisSF in sf_range:
     while True:
         trialCount = 0
 
-        try: # see if there is that many indicies
-            dotsL = dots[dotIndex:dotendIndex]
-            dotsR = dots[dotIndex:dotendIndex]
-            dotsL_Col = color_lists[dotIndex:dotendIndex]
-            dotsR_Col = color_lists[dotIndex:dotendIndex]
-        except: #overshoot correction
-            dotsL = dots[dotIndex:999]
-            dotsR = dots[dotIndex:999]
-            dotsL_Col = color_lists[dotIndex:999]
-            dotsR_Col = color_lists[dotIndex:999]
+        #No need for overshoot correction, any non-applicable index is sorted automatically to the end of the list
+        dotsL = dots[dotIndex:dotendIndex]
+        dotsR = dots[dotIndex:dotendIndex]
+        dotsL_Col = color_lists[dotIndex:dotendIndex]
+        dotsR_Col = color_lists[dotIndex:dotendIndex]
+
 
         # needs to be additive, i.e a dot is added everytime,. not overridden 
 
@@ -306,7 +285,6 @@ for thisSF in sf_range:
 
         winA.flip()
         winB.flip()
-        print "Flipped"
 
         event.clearEvents(eventType ='keyboard')
 
@@ -314,8 +292,9 @@ for thisSF in sf_range:
 
         if keys[0] == 'q':
             print 'Quitting'
+            winA.close()
+            winB.close()
             core.quit()
-            win.close()
             quit()
         elif keys[0] == 'space':
             trialCount  +=1
