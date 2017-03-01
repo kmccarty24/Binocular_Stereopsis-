@@ -10,6 +10,15 @@ import numpy as np
 import math, os, random
 
 
+## To Do ##
+
+# Randomise\ SF order 
+## Automate dot adds to 500ms increments
+### Randomise orientation from 45/-45 to 90/0
+#### 5 SF, 2 orientations, 10 up, 10 down for each 
+
+
+
 wd = os.getcwd()
 
 # f_Size = 600
@@ -33,12 +42,13 @@ maxDots = info['Max Dots']
 
 ## -- ## Spatial Frequency ##--##
 
-# Set correct units
+# Set correct units - you could use linspace here
 sf_range = np.ndarray.tolist(pl.frange(0.001,0.2,0.005)) # generates a list from an array of floats
 # 0.001 = 1 cycle in every 100 pixels - 1% 
 # 0.2 = 1 cycle every 5 pixels - 20%?
 
 print radius, 'RADIUS'
+
 ## -- ## Nuts and Bolts ##--##
 
 # ioHub
@@ -62,16 +72,16 @@ winA = visual.Window(
         monitor = 'LeftDisplay',
         size = (1280,1024), #left_display.getPixelResolution(),
         units = info['Units'], 
-        fullscr = False,
-        screen = 1, #(left_display.getIndex()- 1) current set 1
+        fullscr = True,
+        screen = 2, #(left_display.getIndex()- 1) current set 1
         color = (0,0,0))
 
 winB = visual.Window(
         monitor = 'RightDisplay',
         size = (1280,1024), #right_display.getPixelResolution(),
         units = info['Units'],
-        fullscr = False,
-        screen = 2, #right_display.getIndex() current set 0
+        fullscr = True,
+        screen = 1, #right_display.getIndex() current set 0
         color = (0,0,0))
 
 # Set the mouse visibility to False BECASUE ITS ANNOYING
