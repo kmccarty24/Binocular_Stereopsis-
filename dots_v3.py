@@ -1,6 +1,7 @@
 from psychopy import visual, event, core, data, gui 
 from psychopy.tools import monitorunittools
 from psychopy.iohub import launchHubServer
+
 from math import pi, sin
 from random import shuffle
 
@@ -18,19 +19,17 @@ import math, os, random
 #### 5 SF, 2 orientations, 10 up, 10 down for each 
 
 
-
-wd = os.getcwd()
-
 # f_Size = 600
 
  
 ## -- ## Set Options ##--##
 
 info = {}
-info['Units'] = ['pix', 'norm' 'deg', 'height', 'cm']
+info['Participant No'] = ''
+info['Age'] = ''
+info['Gender'] = ['Male', 'Female', ' Other', 'Prefer Not To Say']
 info['Max Dots'] = 5000
 info['dotSteps'] = 100
-info['Element Mask'] = ['circle', 'gauss']
 dlg = gui.DlgFromDict(info) #dialog box
 if not dlg.OK: #did they push ok?
     core.quit()
@@ -42,12 +41,10 @@ maxDots = info['Max Dots']
 
 ## -- ## Spatial Frequency ##--##
 
-# Set correct units - you could use linspace here
-sf_range = np.ndarray.tolist(pl.frange(0.001,0.2,0.005)) # generates a list from an array of floats
+# sf_range = np.ndarray.tolist(pl.frange(0.001,0.2,0.005)) # generates a list from an array of floats
 # 0.001 = 1 cycle in every 100 pixels - 1% 
 # 0.2 = 1 cycle every 5 pixels - 20%?
 
-print radius, 'RADIUS'
 
 ## -- ## Nuts and Bolts ##--##
 
@@ -62,25 +59,44 @@ left_display = io.devices.LeftDisplay
 right_display = io.devices.RightDisplay
 mouse = io.devices.mouse
 
-
 print left_display.getIndex()
 print right_display.getIndex()
+
+## Handers + Text File ##
+
+wd = os.getcwd()
+
+dataFile = open(('%s.txt' %(info['Participant Number']), 'w'))
+
+filename = '%s\\%s' %(wd,info['Participant Number'])
+
+rivalExp = data.ExperimentHandler(name = 'Rivalry to Stable',
+                                  extraInfo = info,
+                                  dataFileName = filename)
+
+conditions = data.importConditions('trials.xlsx')
+
+trials = data.TrialHandler(trialList = conditions, nReps = 1, name = 'Main Sequence')
+
+rivalExp.addLoop(trials)
+
+dataFile.write('PNumb\t Age\t Gender\t sf\t ori\t upDown\t noDots\n')
 
 # Windows 
 
 winA = visual.Window(
         monitor = 'LeftDisplay',
         size = (1280,1024), #left_display.getPixelResolution(),
-        units = info['Units'], 
-        fullscr = True,
+        units = 'pix', 
+        fullscr = False,
         screen = 2, #(left_display.getIndex()- 1) current set 1
         color = (0,0,0))
 
 winB = visual.Window(
         monitor = 'RightDisplay',
         size = (1280,1024), #right_display.getPixelResolution(),
-        units = info['Units'],
-        fullscr = True,
+        units = 'pix',
+        fullscr = False,
         screen = 1, #right_display.getIndex() current set 0
         color = (0,0,0))
 
@@ -97,26 +113,20 @@ fix_L = visual.Circle(winA,
                       lineWidth = 0,
                       fillColor = 'Black')
 
-# roi_L = visual.Circle(winA,
-                      # radius = f_Size/2, 
-                      # lineWidth = 0, 
-                      # fillColor = (-.5,-.5,-.5))
-
 fix_R = visual.Circle(winB, 
                       radius = 5,
                       lineWidth = 0,
                       fillColor = 'Black')
 
-# roi_R = visual.Circle(winB,
-                      # radius = f_Size/2, 
-                      # lineWidth = 0, 
-                      # fillColor = (-.5,-.5,-.5))
+def dotColorsAndCoords(maxDots = 5000, radius = 300):
+    ''' a function that generates coordinates of a circle 
+        and pairs them with a color, either black or white
+    '''
 
-    # pos=(x_cent +x_off, y_cent)
+    #Note: Cant use a geneator as we need to access 100 items at a time rather than procedurally
 
-def dot_coords(maxDots = 1000, radius = radius):
-
-    rad = radius
+    # Define some random coordinates and convert to x and y coordinates
+    rad = radius #below uses arrays so operators apply to all values
     t = np.random.uniform(0.0, 2.0*np.pi, maxDots) # Angle between 0 and 2Pi (in radians)
     r = rad * np.sqrt(np.random.uniform(0.0, 1.0, maxDots)) # sqrt gets rid of clustering 
     x = r * np.cos(t)                                       # by making smaller numbers more 
@@ -124,34 +134,28 @@ def dot_coords(maxDots = 1000, radius = radius):
                                                             # creates the opposite in that there 
                                                             # are more larger numbers but this 
                                                             # equates to an equlibiriam 
-    #Pair x and y into a list of lists and return
-    dot_array = []
-    for i in range(len(x)):
-        dot_array.append([x[i], y[i]])
+    # Now create a list of them 
+    coords = [[x[i], y[i]] for i in range(maxDots)]
+    shuffle(coords)
 
-    return dot_array
-
-
-def dot_colors(maxDots = 1000):
-    '''Creates a list of 1000 values of either 1 or -1 and shuffles them '''
-
+    # Define a list of colors and shuffle them 
     color_lists = []
-
-    for dot in range(maxDots/2):
+    for i in range(maxDots/2):
         color_lists.append([-1,-1,-1])
     for i in range(maxDots/2):
         color_lists.append([1,1,1])
-
     shuffle(color_lists)
-    
-    return color_lists
 
-        # Creat a list of lists with a colour in it.
+    return zip(color_lists, coords) # tup[0] = color, tup[1] = coord
+
 
 def displayInstructions(text, acceptedKeys= None):
 
-    instructA = visual.TextStim(winA, text = text, color = 'red')
-    instructB = visual.TextStim(winB, text = text, color = 'red')
+    reversedString = text[::-1]
+
+    instructA = visual.TextStim(winA, text = reversedString, color = 'red')
+    instructB = visual.TextStim(winB, text = reversedString, color = 'red')
+
 
     instructA.draw()
     instructB.draw()
@@ -163,63 +167,82 @@ def displayInstructions(text, acceptedKeys= None):
     winB.flip()
 
 
-# SF Report
-
-sf_Val = visual.TextStim(winB, text = '', pos = [550,-400])
-
 # Gratings to be placed on top of the circles
 
 grate_L = visual.GratingStim(winA, 
                             ori=45,
                             tex ='sin',
-                            mask = info['Element Mask'], 
+                            mask = 'circle', 
                             size= radius*2, 
                             sf=1, # Dont need to change this
-                            #pos = (x_cent -x_off, y_cent),
                             contrast = 0.25, #Chosen 0.25
                             color= (1,1,1),
                             colorSpace = 'rgb',
-                            units = info['Units'],
+                            units = 'pix',
                             autoLog=False)
     
 grate_R = visual.GratingStim(winB, 
                             ori=-45,
                             tex ='sin',
-                            mask = info['Element Mask'], 
+                            mask = 'circle', 
                             size=radius*2, 
                             sf=1, # Dont need to change this
-                            #pos = (x_cent -x_off, y_cent),
                             contrast = 0.25, #Chosen 0.25
                             color= (1,1,1),
                             colorSpace = 'rgb',
-                            units = info['Units'],
+                            units = 'pix',
                             autoLog=False)
-
-fix_L.draw()
-fix_R.draw()
-
-# roi_L.draw()
-# roi_R.draw()
-
-grate_L.draw()
-grate_R.draw()
-
-winA.flip()
-winB.flip()
-
-# Now prepare the random dot coordinates
-dots = dot_coords(maxDots = maxDots)
-shuffle(dots)
-
-color_lists = dot_colors(maxDots = maxDots)
 
 # Display Instructions
 instruct = 'Press Space To Continue'
 displayInstructions(text = instruct)
 
-# Trials Draw
 
+## -- ## Trials Draw ##-- ##
+
+for thisTrial in trials:
+    # Setup
     
+    #Set sf
+    grate_L.sf = thisTrial['sf']
+    grate_R.sf = thisTrial['sf']
+
+    #Set ori
+    if thisTrial['ori'] == 90 and thisTrial['leftRight'] == 1:
+        grate_L.ori = 0
+        grate_R.ori = 90
+    elif thisTrial['ori'] == 90 and thisTrial['leftRight'] == 0:
+        grate_L.ori = 90
+        grate_R.ori = 0
+    elif thisTrial['ori'] == 45 and thisTrial['leftRight'] == 1:
+        grate_L.ori = 45
+        grate_R.ori = 270
+    elif thisTrial['ori'] == 45 and thisTrial['leftRight'] == 0:
+        grate_L.ori = 270
+        grate_R.ori = 45
+
+
+    # Set up trial or down trial
+    if thisTrial['upDown'] == 'up':
+        dotIndex = 0
+    elif thisTrial['upDown'] == 'down'
+        dotIndex = len(maxDots)
+
+
+    # Generate new dots and colors
+    dotColorArray = dotColorsAndCoords(maxDots = maxDots) # Returns Tuple color in [0],
+                                                           # Coords in [1]
+
+    # Start assigning coordinates to dots container ready for the elementArrayStim
+    dotsArray = 
+
+
+    # While loop??
+
+
+## -- OLD BELOW ## -- ##
+
+
     # Choose SF for the Grating
 for thisSF in sf_range:
     sf = thisSF
@@ -315,6 +338,8 @@ for thisSF in sf_range:
         elif keys[0] == 'down':
             dotendIndex -= dotSteps # take away
             trialCount += 1
+
+dataFile.close()
 
 winA.close()
 winB.close()
