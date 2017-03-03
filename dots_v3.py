@@ -18,6 +18,7 @@ import math, os, random
 ### Randomise orientation from 45/-45 to 90/0
 #### 5 SF, 2 orientations, 10 up, 10 down for each 
 
+# Test using threads
 
 # f_Size = 600
 
@@ -118,7 +119,7 @@ fix_R = visual.Circle(winB,
                       lineWidth = 0,
                       fillColor = 'Black')
 
-def dotColorsAndCoords(maxDots = 5000, radius = 300):
+def dotCoords(maxDots = 5000, radius = 300):
     ''' a function that generates coordinates of a circle 
         and pairs them with a color, either black or white
     '''
@@ -138,6 +139,12 @@ def dotColorsAndCoords(maxDots = 5000, radius = 300):
     coords = [[x[i], y[i]] for i in range(maxDots)]
     shuffle(coords)
 
+
+    return coords # tup[0] = color, tup[1] = coord
+
+
+def colorLists(maxDots = 5000):
+
     # Define a list of colors and shuffle them 
     color_lists = []
     for i in range(maxDots/2):
@@ -146,8 +153,7 @@ def dotColorsAndCoords(maxDots = 5000, radius = 300):
         color_lists.append([1,1,1])
     shuffle(color_lists)
 
-    return zip(color_lists, coords) # tup[0] = color, tup[1] = coord
-
+    return color_lists
 
 def displayInstructions(text, acceptedKeys= None):
 
@@ -202,6 +208,9 @@ displayInstructions(text = instruct)
 
 for thisTrial in trials:
     # Setup
+
+    event.clearEvents(eventType ='keyboard')
+
     
     #Set sf
     grate_L.sf = thisTrial['sf']
@@ -222,22 +231,67 @@ for thisTrial in trials:
         grate_R.ori = 45
 
 
-    # Set up trial or down trial
-    if thisTrial['upDown'] == 'up':
-        dotIndex = 0
-    elif thisTrial['upDown'] == 'down'
-        dotIndex = len(maxDots)
-
-
     # Generate new dots and colors
-    dotColorArray = dotColorsAndCoords(maxDots = maxDots) # Returns Tuple color in [0],
-                                                           # Coords in [1]
-
-    # Start assigning coordinates to dots container ready for the elementArrayStim
-    dotsArray = 
+    dotColorArray = dotCoords(maxDots = maxDots)
+    colorList = colorLists(maxDots = maxDots)
 
 
-    # While loop??
+    # While loop
+    while True:
+
+        # Set up trial or down trial
+        if thisTrial['upDown'] == 'up':
+            dotIndex = 0
+            dotsArray = []
+            colorArray = []
+        elif thisTrial['upDown'] == 'down'
+            dotIndex = len(dotColorArray)
+            dotsArray = dotColorArray
+            colorArray = colorList
+
+        try:
+            for frameN in range(30) 
+            dot_stim_L = visual.ElementArrayStim(
+                                                winA,
+                                                nElements = len(dotsArray),
+                                                xys = dotsArray,
+                                                elementTex = None,
+                                                units="pix",
+                                                colorSpace = "rgb",
+                                                colors = colorArray,
+                                                elementMask="circle",
+                                                sizes= dotSize)
+
+            dot_stim_R = visual.ElementArrayStim(
+                                                winB,
+                                                nElements = len(dotsArray),
+                                                xys = dotsArray,
+                                                elementTex = None,
+                                                units="pix",
+                                                colors = colorArray,
+                                                elementMask="circle",
+                                                sizes=dotSize)
+            grate_L.draw()
+            grate_R.draw()
+
+            dot_stim_L.draw()
+            dot_stim_R.draw()
+
+            winA.flip()
+            winB.flip()
+
+        except:
+
+            grate_L.draw()
+            grate_R.draw()
+
+            winA.flip()
+            winB.flip()
+
+        # Increment 
+
+
+
 
 
 ## -- OLD BELOW ## -- ##
@@ -245,28 +299,6 @@ for thisTrial in trials:
 
     # Choose SF for the Grating
 for thisSF in sf_range:
-    sf = thisSF
-    print 'this Spatial Freq is', thisSF
-
-    sf_Val.text = thisSF
-
-    # Choose a random orientation - always opposite 
-    randOri = random.randrange(0,1)
-    
-    if randOri == 1:
-        l_o = 0 #left ori
-        r_o = 0 #right ori
-    else:
-        l_o = 0
-        r_o = 0
-
-    # Set these values 
-
-    grate_L.sf = sf
-    grate_R.sf = sf
-#    grate_L.setOri(l_o)
-#    grate_R.setOri(r_o)
-
     # Allow dots to be Drawn
 
     dotIndex = 0
