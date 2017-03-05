@@ -1,7 +1,7 @@
 monitor_devices:
     - Display:
         name: LeftDisplay
-        reporting_unit_type: norm
+        reporting_unit_type: pix
         device_number: 0
         physical_dimensions:
             width: 590
