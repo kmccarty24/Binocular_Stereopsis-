@@ -13,12 +13,10 @@ import math, os, random
 
 ## To Do ##
 
-# Randomise\ SF order 
-## Automate dot adds to 500ms increments
-### Randomise orientation from 45/-45 to 90/0
-#### 5 SF, 2 orientations, 10 up, 10 down for each 
-
-# Test using threads
+# Add Splash Screen Pre Trial
+# Check DataFiles
+# Perhaps use thread if too heavy
+# Build a Data Aggregator
 
 # f_Size = 600
 
@@ -30,7 +28,7 @@ info['Participant No'] = ''
 info['Age'] = ''
 info['Gender'] = ['Male', 'Female', ' Other', 'Prefer Not To Say']
 info['Max Dots'] = 5000
-info['dotSteps'] = 100
+info['dotSteps'] = 125
 dlg = gui.DlgFromDict(info) #dialog box
 if not dlg.OK: #did they push ok?
     core.quit()
@@ -81,7 +79,7 @@ trials = data.TrialHandler(trialList = conditions, nReps = 1, name = 'Main Seque
 
 rivalExp.addLoop(trials)
 
-dataFile.write('PNumb\t Age\t Gender\t sf\t ori\t upDown\t noDots\n')
+dataFile.write('Sub\t Age\t Gender\t trialNo\t trialType\t sf\t ori\t noDots\t failedTrial\n')
 
 # Windows 
 
@@ -119,15 +117,13 @@ fix_R = visual.Circle(winB,
                       lineWidth = 0,
                       fillColor = 'Black')
 
-def dotCoords(maxDots = 5000, radius = 300):
+def dot_coords(maxDots = 5000, radius = 300):
     ''' a function that generates coordinates of a circle 
         and pairs them with a color, either black or white
     '''
 
-    #Note: Cant use a geneator as we need to access 100 items at a time rather than procedurally
-
     # Define some random coordinates and convert to x and y coordinates
-    rad = radius #below uses arrays so operators apply to all values
+    rad = radius
     t = np.random.uniform(0.0, 2.0*np.pi, maxDots) # Angle between 0 and 2Pi (in radians)
     r = rad * np.sqrt(np.random.uniform(0.0, 1.0, maxDots)) # sqrt gets rid of clustering 
     x = r * np.cos(t)                                       # by making smaller numbers more 
@@ -135,25 +131,22 @@ def dotCoords(maxDots = 5000, radius = 300):
                                                             # creates the opposite in that there 
                                                             # are more larger numbers but this 
                                                             # equates to an equlibiriam 
-    # Now create a list of them 
-    coords = [[x[i], y[i]] for i in range(maxDots)]
-    shuffle(coords)
-
-
-    return coords # tup[0] = color, tup[1] = coord
-
-
-def colorLists(maxDots = 5000):
-
+    
+    coords = np.stack((x,y), axis = 1) # stack the two arrays horizontally (column wise)
+    
+    np.random.shuffle(coords)
+    
     # Define a list of colors and shuffle them 
     color_lists = []
     for i in range(maxDots/2):
         color_lists.append([-1,-1,-1])
     for i in range(maxDots/2):
         color_lists.append([1,1,1])
-    shuffle(color_lists)
 
-    return color_lists
+    np.random.shuffle(color_lists)
+
+    return coords, color_lists
+
 
 def displayInstructions(text, acceptedKeys= None):
 
@@ -205,12 +198,22 @@ displayInstructions(text = instruct)
 
 
 ## -- ## Trials Draw ##-- ##
+trialCount = 0
 
 for thisTrial in trials:
     # Setup
+    trialCount +=1
+    
+    print 'trial No: %i' %(trialCount)
+    print 'trial SF: %s' %(thisTrial['sf'])
+    print 'trial ORI: %s' %(thisTrial['ori'])
+    print 'trial TYPE: %s' %(thisTrial['upDown'])
 
+    io.clearEvents('all')
     event.clearEvents(eventType ='keyboard')
+    
 
+    #PUT IN A SPLASH SCREEN (TEXTSTIM)
     
     #Set sf
     grate_L.sf = thisTrial['sf']
@@ -232,150 +235,114 @@ for thisTrial in trials:
 
 
     # Generate new dots and colors
-    dotColorArray = dotCoords(maxDots = maxDots)
-    colorList = colorLists(maxDots = maxDots)
+    dotArray, colorArray = dotCoords(maxDots = maxDots)
 
+    # Set up trial or down trial
+    if thisTrial['upDown'] == 'up':
+        dotIndex = 0
+    elif thisTrial['upDown'] == 'down'
+        dotIndex = len(coords)
 
     # While loop
     while True:
 
-        # Set up trial or down trial
-        if thisTrial['upDown'] == 'up':
-            dotIndex = 0
-            dotsArray = []
-            colorArray = []
-        elif thisTrial['upDown'] == 'down'
-            dotIndex = len(dotColorArray)
-            dotsArray = dotColorArray
-            colorArray = colorList
-
         try:
-            for frameN in range(30) 
-            dot_stim_L = visual.ElementArrayStim(
-                                                winA,
-                                                nElements = len(dotsArray),
-                                                xys = dotsArray,
-                                                elementTex = None,
-                                                units="pix",
-                                                colorSpace = "rgb",
-                                                colors = colorArray,
-                                                elementMask="circle",
-                                                sizes= dotSize)
+            for frameN in range(30): 
+                dot_stim_L = visual.ElementArrayStim(
+                                                    winA,
+                                                    nElements = dotArray[0:dotIndex],
+                                                    xys = dotsArray,
+                                                    elementTex = None,
+                                                    units="pix",
+                                                    colorSpace = "rgb",
+                                                    colors = colorArray[0:dotIndex],
+                                                    elementMask="circle",
+                                                    sizes= dotSize)
 
-            dot_stim_R = visual.ElementArrayStim(
-                                                winB,
-                                                nElements = len(dotsArray),
-                                                xys = dotsArray,
-                                                elementTex = None,
-                                                units="pix",
-                                                colors = colorArray,
-                                                elementMask="circle",
-                                                sizes=dotSize)
-            grate_L.draw()
-            grate_R.draw()
+                dot_stim_R = visual.ElementArrayStim(
+                                                    winB,
+                                                    nElements = dotArray[0:dotIndex],
+                                                    xys = dotsArray,
+                                                    elementTex = None,
+                                                    units="pix",
+                                                    colors = colorArray[0:dotIndex],
+                                                    elementMask="circle",
+                                                    sizes=dotSize)
+                grate_L.draw()
+                grate_R.draw()
 
-            dot_stim_L.draw()
-            dot_stim_R.draw()
+                dot_stim_L.draw()
+                dot_stim_R.draw()
 
-            winA.flip()
-            winB.flip()
+                winA.flip()
+                winB.flip()
 
         except:
+            for frameN in range(30):
+                grate_L.draw()
+                grate_R.draw()
 
-            grate_L.draw()
-            grate_R.draw()
+                winA.flip()
+                winB.flip()
 
-            winA.flip()
-            winB.flip()
+        # check for key presses BEORE increments otherwise innaccurate reporting of number of dots on screen right now
 
+        keys = kb.getKeys()
+        for kbe in keys:
+            if kbe.key == 'space':
+                dotsOnScreen = len(dotArray[0:dotIndex])
+                trailFailed = False
+                break
+            elif kbe.key == 'q':
+                dotsOnScreen = len(dotArray[0:dotIndex])
+                trailFailed = False
+                trials.addData('trialNo', trialNo)
+                trials.addData('Dots', dotsOnScreen)
+                trials.addData('TrialType', thisTrial['upDown'])
+                trials.addData('FailedTrial', 'Quitted Runtime')
+                trials.finished = True
+                dataFile.write('%s \t %s \t %s \t %i \t %s \t %f \t %i \t %i \t %s \n') %(info['Participant No'], info['Age'], 
+                                                                          info['Gender'], trialNo,
+                                                                          thisTrial['upDown'], thisTrial['sf'], 
+                                                                          thisTrial['ori'], dotsOnScreen,
+                                                                          str(failedTrial))
+                dataFile.close()
+
+        
         # Increment 
 
-
-
-
-
-## -- OLD BELOW ## -- ##
-
-
-    # Choose SF for the Grating
-for thisSF in sf_range:
-    # Allow dots to be Drawn
-
-    dotIndex = 0
-    dotendIndex = dotSteps  # add x dots a time (upto but not including)
-
-    while True:
-        trialCount = 0
-
-        #No need for overshoot correction, any non-applicable index is sorted automatically to the end of the list
-        dotsL = dots[dotIndex:dotendIndex]
-        dotsR = dots[dotIndex:dotendIndex]
-        dotsL_Col = color_lists[dotIndex:dotendIndex]
-        dotsR_Col = color_lists[dotIndex:dotendIndex]
-
-
-        # needs to be additive, i.e a dot is added everytime,. not overridden 
-
-        dot_stim_L = visual.ElementArrayStim(
-        winA,
-        nElements = len(dotsL),
-        xys = dotsL,
-        elementTex = None,
-        units="pix",
-        colorSpace = "rgb",
-        colors = dotsL_Col,
-        elementMask="circle",
-        sizes= dotSize)
-
-        dot_stim_R = visual.ElementArrayStim(
-        winB,
-        nElements = len(dotsR),
-        xys = dotsR,
-        elementTex = None,
-        units="pix",
-        colors = dotsL_Col,
-        elementMask="circle",
-        sizes=dotSize)
-
-        sf_Val.draw()
-
-        grate_L.draw()
-        grate_R.draw()
-
-        dot_stim_L.draw()
-        dot_stim_R.draw()
-
-        fix_L.draw()
-        fix_R.draw()
-
-        winA.flip()
-        winB.flip()
-
-        event.clearEvents(eventType ='keyboard')
-
-        keys = event.waitKeys(keyList = ['q', 'space', 'up', 'down'])
-
-        if keys[0] == 'q':
-            print 'Quitting'
-            winA.close()
-            winB.close()
-            core.quit()
-            quit()
-        elif keys[0] == 'space':
-            trialCount  +=1
+        if thisTrial['upDown'] == 'up' and len(dotArray) == maxDots:
+            trialFailed = True
+            dotsOnScreen = 'Up - NoKey'
             break
-        elif keys[0] == 'up':
-            dotendIndex += dotSteps #add more
-            trialCount += 1
-        elif keys[0] == 'down':
-            dotendIndex -= dotSteps # take away
-            trialCount += 1
+        elif thisTrial['upDown'] == 'down' and len(dotArray) == 0: # may casue problems if failure of having a len of 0
+            trialFailed = True
+            dotsOnScreen = 'Down - NoKey'
+            break
+        elif thisTrial['upDown'] == 'up' and len(dotArray) != maxDots:
+            trialFailed = False
+            dotIndex += dotSteps
+        elif thisTrial['upDown'] == 'down' and len(dotArray) != 0:
+            trailFailed = False
+            dotIndex -= dotSteps
+
+    trials.addData('TrailNo', TrailNo)
+    trials.addData('Dots', dotsOnScreen)
+    trials.addData('TrialType', thisTrial['upDown'])
+    trials.addData('FailedTrial', str(trialFailed))
+
+    dataFile.write('%s \t %s \t %s \t %i \t %s \t %f \t %i \t %i \t %s \n') %(info['Participant No'], info['Age'], 
+                                                                              info['Gender'], trialNo,
+                                                                              thisTrial['upDown'], thisTrial['sf'], 
+                                                                              thisTrial['ori'], dotsOnScreen,
+                                                                              str(failedTrial))
+
+# ('sub\t Age\t Gender\t trialNo\t trialType\t sf\t ori\t noDots\t failedTrial\n')
+
 
 dataFile.close()
 
 winA.close()
 winB.close()
 core.quit()
-
-
-
+quit()
