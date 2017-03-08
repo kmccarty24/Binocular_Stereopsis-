@@ -15,7 +15,6 @@ import math, os, random
 
 # Add Splash Screen Pre Trial
 # Check DataFiles
-# Perhaps use thread if too heavy
 # Build a Data Aggregator
 
 # f_Size = 600
