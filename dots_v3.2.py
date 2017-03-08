@@ -9,7 +9,6 @@ import os, random
 
 # Add Splash Screen Pre Trial
 # Check DataFiles
-# Perhaps use thread if too heavy
 # Build a Data Aggregator
 
  
@@ -89,7 +88,7 @@ winB = visual.Window(
         size = (1280,1024), #right_display.getPixelResolution(),
         units = 'pix',
         fullscr = False,
-        screen = 1, #right_display.getIndex() current set 0
+        screen = 2, #right_display.getIndex() current set 0
         color = (0,0,0))
 
 # Set the mouse visibility to False BECASUE ITS ANNOYING
@@ -97,18 +96,13 @@ winB = visual.Window(
 mouse.setSystemCursorVisibility(False)
 
 ## Stimuli ##
+ 
+splashTextRival = 'Please confirm rivalry'
+splashTextStable = 'Please confirm stability'
+splashText_L = visual.TextStim(winA, text = '', color = 'white', pos = (-300,0))
+splashText_R = visual.TextStim(winB, text = '', color = 'white', pos = (-300,0))
 
-# Circles and Dot Coordinates  
 
-fix_L = visual.Circle(winA, 
-                      radius = 5,
-                      lineWidth = 0,
-                      fillColor = 'Black')
-
-fix_R = visual.Circle(winB, 
-                      radius = 5,
-                      lineWidth = 0,
-                      fillColor = 'Black')
 
 def dotCoords(maxDots = 5000, radius = 300):
     ''' a function that generates coordinates of a circle 
@@ -186,27 +180,6 @@ grate_R = visual.GratingStim(winB,
                             autoLog=False)
 
 
-# Element Array Stims
-
-dot_stim_L = visual.ElementArrayStim(
-                                    winA,
-                                    nElements = 100,
-                                    xys = None,
-                                    elementTex = None,
-                                    units = "pix",
-                                    colorSpace = "rgb",
-                                    elementMask ="circle",
-                                    sizes = dotSize)
-
-dot_stim_R = visual.ElementArrayStim(
-                                    winB,
-                                    nElements = 100,
-                                    xys = None,
-                                    elementTex = None,
-                                    units = "pix",
-                                    colorSpace = "rgb",
-                                    elementMask ="circle",
-                                    sizes = dotSize)
 
 
 # Display Instructions
@@ -228,9 +201,6 @@ for thisTrial in trials:
 
     io.clearEvents('all')
     event.clearEvents(eventType ='keyboard')
-    
-
-    #PUT IN A SPLASH SCREEN (TEXTSTIM)
     
     #Set sf
     grate_L.sf = thisTrial['sf']
@@ -260,35 +230,88 @@ for thisTrial in trials:
     elif thisTrial['upDown'] == 'down':
         dotIndex = maxDots
 
+    #PUT IN A SPLASH SCREEN (TEXTSTIM)
+    if thisTrial['upDown'] == 'up':
+        splashText_L.text = splashTextRival[::-1]
+        splashText_R.text = splashTextRival[::-1]
+
+        grate_L.draw()
+        grate_R.draw()
+        splashText_L.draw()
+        splashText_R.draw()
+
+        winA.flip()
+        winB.flip()
+        kb.waitForPresses(keys = [' '])
+
+    elif thisTrial['upDown'] == 'down': #Need to add element array in 
+        splashText_L.text = splashTextStable[::-1]
+        splashText_R.text = splashTextStable[::-1]
+
+        grate_L.draw()
+        grate_R.draw()
+        splashText_L.draw()
+        splashText_R.draw()
+
+        winA.flip()
+        winB.flip()
+        kb.waitForPresses(keys = [' '])
 
     # While loop
     while True:
 
-        dotsOnScreen = len(dotArray[0:dotIndex])
+        tmp_dotArray = np.array(dotArray[0:dotIndex])
+        tmp_colArray = np.array(colorArray[0:dotIndex])
+        dotsOnScreen = len(tmp_dotArray)
         
-        dot_stim_L.nElements = dotsOnScreen
-        dot_stim_R.nElements = dotsOnScreen
-        dot_stim_L.xys = dotArray[0:dotIndex]
-        dot_stim_R.xys = dotArray[0:dotIndex]
-        dot_stim_L.colors = colorArray[0:dotIndex]
-        dot_stim_R.colors = colorArray[0:dotIndex]
+        # Element Array Stims
 
-        #print dotArray[0:dotIndex]
-        for frameN in range(30): 
-            keys = kb.getKeys() 
-            if len(keys) > 0:
-                break
+        dot_stim_L = visual.ElementArrayStim(
+                                            winA,
+                                            nElements = dotsOnScreen,
+                                            xys = tmp_dotArray,
+                                            elementTex = None,
+                                            units = "pix",
+                                            colors = tmp_colArray,
+                                            colorSpace = "rgb",
+                                            elementMask ="circle",
+                                            sizes = dotSize)
 
-            grate_L.draw()
-            grate_R.draw()
+        dot_stim_R = visual.ElementArrayStim(
+                                            winB,
+                                            nElements = dotsOnScreen,
+                                            xys = tmp_dotArray,
+                                            elementTex = None,
+                                            units = "pix",
+                                            colorSpace = "rgb",
+                                            colors = tmp_colArray,
+                                            elementMask ="circle",
+                                            sizes = dotSize)
+        try:
+            for frameN in range(30): 
+                keys = kb.getKeys() 
+                if len(keys) > 0:
+                    break
 
-            dot_stim_L.draw()
-            dot_stim_R.draw()
+                grate_L.draw()
+                grate_R.draw()
 
-            winA.flip()
-            winB.flip()
+                dot_stim_L.draw()
+                dot_stim_R.draw()
 
-        # check for key presses BEFORE increments otherwise innaccurate reporting of number of dots on screen right now
+                winA.flip()
+                winB.flip()
+        except:
+                for frameN in range(30): 
+                    keys = kb.getKeys() 
+                    if len(keys) > 0:
+                        break
+
+                    grate_L.draw()
+                    grate_R.draw()
+
+                    winA.flip()
+                    winB.flip()
 
         for kbe in keys:
             if kbe.key == ' ':
@@ -308,23 +331,24 @@ for thisTrial in trials:
                                                                                           thisTrial['ori'], dotsOnScreen,
                                                                                           trialFailed))
                 dataFile.close()
+                winA.close()
+                winB.close()
         
         # Increment 
 
-        if thisTrial['upDown'] == 'up' and len(dotArray[0:dotIndex]) == maxDots:
+        if thisTrial['upDown'] == 'up' and dotsOnScreen == maxDots:
             print 'reached upper limit'
             trialFailed = True
             break
-        elif thisTrial['upDown'] == 'down' and len(dotArray[0:dotIndex]) == 0: # may casue problems if failure of having a len of 0
+        elif thisTrial['upDown'] == 'down' and dotsOnScreen == dotSteps:
             print 'reached lower limit'
             trialFailed = True
             break
-        elif thisTrial['upDown'] == 'up' and len(dotArray[0:dotIndex]) != maxDots:
+        elif thisTrial['upDown'] == 'up' and dotsOnScreen != maxDots:
             print 'going up'
             trialFailed = False
             dotIndex += dotSteps
-            
-        elif thisTrial['upDown'] == 'down' and len(dotArray[0:dotIndex]) != 0:
+        elif thisTrial['upDown'] == 'down' and dotsOnScreen != 0:
             print 'going down'
             trailFailed = False
             dotIndex -= dotSteps
@@ -340,7 +364,6 @@ for thisTrial in trials:
                                                                               thisTrial['ori'], dotsOnScreen,
                                                                               trialFailed))
 
-# ('sub\t Age\t Gender\t trialNo\t trialType\t sf\t ori\t noDots\t failedTrial\n')
     trialCount+=1
 
 dataFile.close()
