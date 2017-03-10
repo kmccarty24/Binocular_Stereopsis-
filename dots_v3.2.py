@@ -99,8 +99,8 @@ mouse.setSystemCursorVisibility(False)
  
 splashTextRival = 'Please confirm rivalry'
 splashTextStable = 'Please confirm stability'
-splashText_L = visual.TextStim(winA, text = '', color = 'white', pos = (-300,0))
-splashText_R = visual.TextStim(winB, text = '', color = 'white', pos = (-300,0))
+splashText_L = visual.TextStim(winA, text = '', color = 'white', pos = (0, -350))
+splashText_R = visual.TextStim(winB, text = '', color = 'white', pos = (0, -350))
 
 
 
@@ -200,6 +200,7 @@ for thisTrial in trials:
     print 'trial TYPE: %s' %(thisTrial['upDown'])
 
     io.clearEvents('all')
+    kb.clearEvents()
     event.clearEvents(eventType ='keyboard')
     
     #Set sf
@@ -226,9 +227,9 @@ for thisTrial in trials:
 
     # Set up trial or down trial
     if thisTrial['upDown'] == 'up':
-        dotIndex = 1
+        dotIndex = dotSteps # this accounts for the blank grating on spash
     elif thisTrial['upDown'] == 'down':
-        dotIndex = maxDots
+        dotIndex = maxDots - dotSteps
 
     #PUT IN A SPLASH SCREEN (TEXTSTIM)
     if thisTrial['upDown'] == 'up':
@@ -245,20 +246,55 @@ for thisTrial in trials:
         kb.waitForPresses(keys = [' '])
 
     elif thisTrial['upDown'] == 'down': #Need to add element array in 
+
+        dot_stim_L = visual.ElementArrayStim(
+                                        winA,
+                                        nElements = maxDots,
+                                        xys = dotArray,
+                                        elementTex = None,
+                                        units = "pix",
+                                        colors = colorArray,
+                                        colorSpace = "rgb",
+                                        elementMask ="circle",
+                                        sizes = dotSize)
+
+        dot_stim_R = visual.ElementArrayStim(
+                                        winB,
+                                        nElements = maxDots,
+                                        xys = dotArray,
+                                        elementTex = None,
+                                        units = "pix",
+                                        colorSpace = "rgb",
+                                        colors = colorArray,
+                                        elementMask ="circle",
+                                        sizes = dotSize)
+
         splashText_L.text = splashTextStable[::-1]
         splashText_R.text = splashTextStable[::-1]
 
         grate_L.draw()
         grate_R.draw()
+        dot_stim_L.draw()
+        dot_stim_R.draw()
         splashText_L.draw()
         splashText_R.draw()
 
         winA.flip()
         winB.flip()
-        kb.waitForPresses(keys = [' '])
+        
+        events = kb.waitForPresses(keys = [' '])
+
+    kb.clearEvents()
+    io.clearEvents('all')
+
+    events = []
+
+    whileBool = True
 
     # While loop
-    while True:
+    while whileBool:
+        
+        resp = None
 
         tmp_dotArray = np.array(dotArray[0:dotIndex])
         tmp_colArray = np.array(colorArray[0:dotIndex])
@@ -287,53 +323,42 @@ for thisTrial in trials:
                                             colors = tmp_colArray,
                                             elementMask ="circle",
                                             sizes = dotSize)
-        try:
-            for frameN in range(30): 
-                keys = kb.getKeys() 
-                if len(keys) > 0:
-                    break
 
-                grate_L.draw()
-                grate_R.draw()
+        for frameN in range(30): 
+            events = kb.getKeys()
 
-                dot_stim_L.draw()
-                dot_stim_R.draw()
+            for kbe in events:
+                if kbe.type == 'KEYBOARD_PRESS' and kbe.key == ' ': # spacebar, need to
+                    print 'pressed space'                           # be specific about it
+                    trialFailed = False                             # being a press not just the
+                    resp = 'space'                                  # key as it detects depresses from 
+                    whileBool = False                               # initialising spacebar press
+                elif kbe.type == 'KEYBOARD_PRESS' and kbe.key == 'q':
+                    trialFailed = False
+                    trials.addData('trialNo', trialCount)
+                    trials.addData('Dots', dotsOnScreen)
+                    trials.addData('TrialType', thisTrial['upDown'])
+                    trials.addData('FailedTrial', 'Quitted Runtime')
+                    trials.finished = True
+                    dataFile.write('%s \t %s \t %s \t %i \t %s \t %s \t %s \t %i \t %s \n' %(info['Participant No'], info['Age'], 
+                                                                                              info['Gender'], trialCount,
+                                                                                              thisTrial['upDown'], thisTrial['sf'], 
+                                                                                              thisTrial['ori'], dotsOnScreen,
+                                                                                              trialFailed))
+                    dataFile.close()
+                    winA.close()
+                    winB.close()
 
-                winA.flip()
-                winB.flip()
-        except:
-                for frameN in range(30): 
-                    keys = kb.getKeys() 
-                    if len(keys) > 0:
-                        break
 
-                    grate_L.draw()
-                    grate_R.draw()
+            grate_L.draw()
+            grate_R.draw()
 
-                    winA.flip()
-                    winB.flip()
+            dot_stim_L.draw()
+            dot_stim_R.draw()
 
-        for kbe in keys:
-            if kbe.key == ' ':
-                print 'pressed space'
-                trialFailed = False
-                break
-            elif kbe.key == 'q':
-                trialFailed = False
-                trials.addData('trialNo', trialCount)
-                trials.addData('Dots', dotsOnScreen)
-                trials.addData('TrialType', thisTrial['upDown'])
-                trials.addData('FailedTrial', 'Quitted Runtime')
-                trials.finished = True
-                dataFile.write('%s \t %s \t %s \t %i \t %s \t %s \t %s \t %i \t %s \n' %(info['Participant No'], info['Age'], 
-                                                                                          info['Gender'], trialCount,
-                                                                                          thisTrial['upDown'], thisTrial['sf'], 
-                                                                                          thisTrial['ori'], dotsOnScreen,
-                                                                                          trialFailed))
-                dataFile.close()
-                winA.close()
-                winB.close()
-        
+            winA.flip()
+            winB.flip()
+
         # Increment 
 
         if thisTrial['upDown'] == 'up' and dotsOnScreen == maxDots:
@@ -345,11 +370,11 @@ for thisTrial in trials:
             trialFailed = True
             break
         elif thisTrial['upDown'] == 'up' and dotsOnScreen != maxDots:
-            print 'going up'
+            # print 'going up'
             trialFailed = False
             dotIndex += dotSteps
         elif thisTrial['upDown'] == 'down' and dotsOnScreen != 0:
-            print 'going down'
+            # print 'going down'
             trailFailed = False
             dotIndex -= dotSteps
 
