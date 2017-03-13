@@ -1,6 +1,6 @@
 monitor_devices:
     - Display:
-        name: LeftDisplay
+        name: LeftMonitor
         reporting_unit_type: pix
         device_number: 0
         physical_dimensions:
@@ -13,7 +13,7 @@ monitor_devices:
         psychopy_monitor_name: LeftDisplay
 
     - Display:
-        name: RightDisplay
+        name: RightMonitor
         reporting_unit_type: pix
         device_number: 1
         physical_dimensions:

@@ -1,0 +1,4 @@
+Sub	Age	Gender	trialNo	trialType	sf	ori	noDots	failedTrial
+99 	 99 	 Male 	 1 	 up 	 0.09 	 90 	 750 	 False 
+99 	 99 	 Male 	 3 	 down 	 0.06 	 90 	 4250 	 False 
+99 	 99 	 Male 	 5 	 up 	 0.09 	 90 	 125 	 False 

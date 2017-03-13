@@ -2,17 +2,27 @@ from psychopy import visual, event, core, data, gui
 from psychopy.tools import monitorunittools
 from psychopy.iohub import launchHubServer
 import numpy as np
-import os, random
+import os
 
 
 ## To Do ##
-
-# Add Splash Screen Pre Trial
-# Check DataFiles
 # Build a Data Aggregator
+# Set up Monitor in ioHub_Config.yaml
 
- 
-## -- ## Set Options ##--##
+## -- ## Working Directories ## -- ##
+
+wd = os.getcwd()
+
+if os.path.isdir('./data'):
+    print 'Data Directory Exists, Passing...'
+    pass
+else:
+    print 'Data Directory Does Not Exist, Creating...'
+    os.mkdir('./data')
+
+dataDir = os.path.join(wd, 'data')
+
+## -- ## Set Options / Constants ##--##
 
 info = {}
 info['Participant No'] = 99
@@ -20,7 +30,7 @@ info['Age'] = 99
 info['Gender'] = ['Male', 'Female', ' Other', 'Prefer Not To Say']
 info['Max Dots'] = 5000
 info['dotSteps'] = 125
-dlg = gui.DlgFromDict(info) #dialog box
+dlg = gui.DlgFromDict(info) 
 if not dlg.OK: #did they push ok?
     core.quit()
 
@@ -34,7 +44,6 @@ maxDots = info['Max Dots']
 # 0.001 = 1 cycle in every 100 pixels - 1% 
 # 0.2 = 1 cycle every 5 pixels - 20%?
 
-
 ## -- ## Nuts and Bolts ##--##
 
 # ioHub
@@ -44,8 +53,8 @@ io = launchHubServer(iohub_config_name = 'iohub_config.yaml')
 ## Hardware ##
 
 kb = io.devices.keyboard
-left_display = io.devices.LeftDisplay
-right_display = io.devices.RightDisplay
+left_display = io.devices.LeftMonitor
+right_display = io.devices.RightMonitor
 mouse = io.devices.mouse
 
 print left_display.getIndex()
@@ -53,17 +62,15 @@ print right_display.getIndex()
 
 ## Handers + Text File ##
 
-wd = os.getcwd()
-
-dataFileName = '%s.txt' %(info['Participant No'])
+dataFileName = '%s\\%s.txt' %(dataDir, info['Participant No'])
 
 dataFile = open(dataFileName, 'w')
 
-filename = '%s\\%s' %(wd,info['Participant No'])
+psychopyFilename = '%s\\%s' %(dataDir ,info['Participant No'])
 
 rivalExp = data.ExperimentHandler(name = 'Rivalry to Stable',
                                   extraInfo = info,
-                                  dataFileName = filename)
+                                  dataFileName = psychopyFilename)
 
 conditions = data.importConditions('trials.xlsx')
 
@@ -71,7 +78,7 @@ trials = data.TrialHandler(trialList = conditions, nReps = 1, name = 'Main Seque
 
 rivalExp.addLoop(trials)
 
-dataFile.write('Sub\t Age\t Gender\t trialNo\t trialType\t sf\t ori\t noDots\t failedTrial\n')
+dataFile.write('Sub\tAge\tGender\ttrialNo\ttrialType\tsf\tori\tnoDots\tfailedTrial\n')
 
 # Windows 
 
@@ -80,7 +87,7 @@ winA = visual.Window(
         size = (1280,1024), #left_display.getPixelResolution(),
         units = 'pix', 
         fullscr = False,
-        screen = 0, #(left_display.getIndex()- 1) current set 1
+        screen = 1, #(left_display.getIndex()- 1) current set 1
         color = (0,0,0))
 
 winB = visual.Window(
@@ -88,10 +95,10 @@ winB = visual.Window(
         size = (1280,1024), #right_display.getPixelResolution(),
         units = 'pix',
         fullscr = False,
-        screen = 2, #right_display.getIndex() current set 0
+        screen = 0, #right_display.getIndex() current set 0
         color = (0,0,0))
 
-# Set the mouse visibility to False BECASUE ITS ANNOYING
+# Set the mouse visibility to False
 
 mouse.setSystemCursorVisibility(False)
 
@@ -117,7 +124,7 @@ def dotCoords(maxDots = 5000, radius = 300):
     y = r * np.sin(t) #these convert to x,y from rads       # sparsely spaced, this technically 
                                                             # creates the opposite in that there 
                                                             # are more larger numbers but this 
-                                                            # equates to an equlibiriam 
+                                                            # equates to an equilibrium 
     
     coords = np.stack((x,y), axis = 1) # stack the two arrays horizontally (column wise)
     
@@ -147,13 +154,13 @@ def displayInstructions(text, acceptedKeys= None):
     instructB.draw()
     winA.flip()
     winB.flip()
-    key = event.waitKeys(keyList = acceptedKeys)
+    key = kb.waitForPresses(keys = [' '])
 
     winA.flip()
     winB.flip()
 
 
-# Gratings to be placed on top of the circles
+# Gratings
 
 grate_L = visual.GratingStim(winA, 
                             ori=45,
@@ -227,7 +234,7 @@ for thisTrial in trials:
 
     # Set up trial or down trial
     if thisTrial['upDown'] == 'up':
-        dotIndex = dotSteps # this accounts for the blank grating on spash
+        dotIndex = dotSteps # this accounts for the blank/full grating on splash
     elif thisTrial['upDown'] == 'down':
         dotIndex = maxDots - dotSteps
 
@@ -293,8 +300,6 @@ for thisTrial in trials:
 
     # While loop
     while whileBool:
-        
-        resp = None
 
         tmp_dotArray = np.array(dotArray[0:dotIndex])
         tmp_colArray = np.array(colorArray[0:dotIndex])
@@ -331,7 +336,7 @@ for thisTrial in trials:
                 if kbe.type == 'KEYBOARD_PRESS' and kbe.key == ' ': # spacebar, need to
                     print 'pressed space'                           # be specific about it
                     trialFailed = False                             # being a press not just the
-                    resp = 'space'                                  # key as it detects depresses from 
+                                                                    # key as it detects depresses from 
                     whileBool = False                               # initialising spacebar press
                 elif kbe.type == 'KEYBOARD_PRESS' and kbe.key == 'q':
                     trialFailed = False
@@ -340,7 +345,7 @@ for thisTrial in trials:
                     trials.addData('TrialType', thisTrial['upDown'])
                     trials.addData('FailedTrial', 'Quitted Runtime')
                     trials.finished = True
-                    dataFile.write('%s \t %s \t %s \t %i \t %s \t %s \t %s \t %i \t %s \n' %(info['Participant No'], info['Age'], 
+                    dataFile.write('%s\t%s\t%s\t%i\t%s\t%s\t%s\t%i\t%s\n' %(info['Participant No'], info['Age'], 
                                                                                               info['Gender'], trialCount,
                                                                                               thisTrial['upDown'], thisTrial['sf'], 
                                                                                               thisTrial['ori'], dotsOnScreen,
@@ -395,5 +400,4 @@ dataFile.close()
 
 winA.close()
 winB.close()
-core.quit()
 quit()
