@@ -388,7 +388,7 @@ for thisTrial in trials:
     trials.addData('TrialType', thisTrial['upDown'])
     trials.addData('FailedTrial', trialFailed)
 
-    dataFile.write('%s \t %s \t %s \t %i \t %s \t %s \t %s \t %i \t %s \n' %(info['Participant No'], info['Age'], 
+    dataFile.write('%s\t%s\t%s\t%i\t%s\t%s\t%s\t%i\t%s\n' %(info['Participant No'], info['Age'], 
                                                                               info['Gender'], trialCount,
                                                                               thisTrial['upDown'], thisTrial['sf'], 
                                                                               thisTrial['ori'], dotsOnScreen,

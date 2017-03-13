@@ -1,23 +1,30 @@
 from psychopy import visual, event, core, data, gui 
 from psychopy.tools import monitorunittools
 from psychopy.iohub import launchHubServer
+
+from math import pi, sin
+from random import shuffle
+
+import pylab as pl
 import numpy as np
-import os, random
+
+import math, os, random
 
 
 ## To Do ##
 
 # Add Splash Screen Pre Trial
 # Check DataFiles
-# Perhaps use thread if too heavy
 # Build a Data Aggregator
+
+# f_Size = 600
 
  
 ## -- ## Set Options ##--##
 
 info = {}
-info['Participant No'] = 99
-info['Age'] = 99
+info['Participant No'] = ''
+info['Age'] = ''
 info['Gender'] = ['Male', 'Female', ' Other', 'Prefer Not To Say']
 info['Max Dots'] = 5000
 info['dotSteps'] = 125
@@ -32,6 +39,7 @@ maxDots = info['Max Dots']
 
 ## -- ## Spatial Frequency ##--##
 
+# sf_range = np.ndarray.tolist(pl.frange(0.001,0.2,0.005)) # generates a list from an array of floats
 # 0.001 = 1 cycle in every 100 pixels - 1% 
 # 0.2 = 1 cycle every 5 pixels - 20%?
 
@@ -56,11 +64,9 @@ print right_display.getIndex()
 
 wd = os.getcwd()
 
-dataFileName = '%s.txt' %(info['Participant No'])
+dataFile = open(('%s.txt' %(info['Participant Number']), 'w'))
 
-dataFile = open(dataFileName, 'w')
-
-filename = '%s\\%s' %(wd,info['Participant No'])
+filename = '%s\\%s' %(wd,info['Participant Number'])
 
 rivalExp = data.ExperimentHandler(name = 'Rivalry to Stable',
                                   extraInfo = info,
@@ -110,7 +116,7 @@ fix_R = visual.Circle(winB,
                       lineWidth = 0,
                       fillColor = 'Black')
 
-def dotCoords(maxDots = 5000, radius = 300):
+def dot_coords(maxDots = 5000, radius = 300):
     ''' a function that generates coordinates of a circle 
         and pairs them with a color, either black or white
     '''
@@ -232,40 +238,33 @@ for thisTrial in trials:
 
     # Set up trial or down trial
     if thisTrial['upDown'] == 'up':
-        dotStart = 0
-        dotEnd = dotStart
-    elif thisTrial['upDown'] == 'down':
-        dotStart = 0
-        dotEnd = maxDots
+        dotIndex = 0
+    elif thisTrial['upDown'] == 'down'
+        dotIndex = len(coords)
 
     # While loop
     while True:
 
         try:
-        for frameN in range(30): 
-            keys = kb.getKeys() 
-            if len(keys) > 0:
-                break
-
-
+            for frameN in range(30): 
                 dot_stim_L = visual.ElementArrayStim(
                                                     winA,
-                                                    nElements = len(dotArray[0:dotStartIndex]),
-                                                    xys = dotArray,
+                                                    nElements = dotArray[0:dotIndex],
+                                                    xys = dotsArray,
                                                     elementTex = None,
                                                     units="pix",
                                                     colorSpace = "rgb",
-                                                    colors = colorArray,
+                                                    colors = colorArray[0:dotIndex],
                                                     elementMask="circle",
                                                     sizes= dotSize)
 
                 dot_stim_R = visual.ElementArrayStim(
                                                     winB,
-                                                    nElements = len(dotArray[0:dotStartIndex]),
-                                                    xys = dotArray,
+                                                    nElements = dotArray[0:dotIndex],
+                                                    xys = dotsArray,
                                                     elementTex = None,
                                                     units="pix",
-                                                    colors = colorArray,
+                                                    colors = colorArray[0:dotIndex],
                                                     elementMask="circle",
                                                     sizes=dotSize)
                 grate_L.draw()
@@ -278,7 +277,6 @@ for thisTrial in trials:
                 winB.flip()
 
         except:
-            print 'exception'
             for frameN in range(30):
                 grate_L.draw()
                 grate_R.draw()
@@ -286,30 +284,29 @@ for thisTrial in trials:
                 winA.flip()
                 winB.flip()
 
-        # check for key presses BEFORE increments otherwise innaccurate reporting of number of dots on screen right now
+        # check for key presses BEORE increments otherwise innaccurate reporting of number of dots on screen right now
 
+        keys = kb.getKeys()
         for kbe in keys:
             if kbe.key == 'space':
-                print 'pressed space'
                 dotsOnScreen = len(dotArray[0:dotIndex])
                 trailFailed = False
                 break
             elif kbe.key == 'q':
                 dotsOnScreen = len(dotArray[0:dotIndex])
                 trailFailed = False
-                trials.addData('trialNo', trialCount)
+                trials.addData('trialNo', trialNo)
                 trials.addData('Dots', dotsOnScreen)
                 trials.addData('TrialType', thisTrial['upDown'])
                 trials.addData('FailedTrial', 'Quitted Runtime')
                 trials.finished = True
                 dataFile.write('%s \t %s \t %s \t %i \t %s \t %f \t %i \t %i \t %s \n') %(info['Participant No'], info['Age'], 
-                                                                                          info['Gender'], trialCount,
-                                                                                          thisTrial['upDown'], thisTrial['sf'], 
-                                                                                          thisTrial['ori'], dotsOnScreen,
-                                                                                          str(trialFailed))
+                                                                          info['Gender'], trialNo,
+                                                                          thisTrial['upDown'], thisTrial['sf'], 
+                                                                          thisTrial['ori'], dotsOnScreen,
+                                                                          str(failedTrial))
                 dataFile.close()
-            else:
-                print 'Assume No Press'
+
         
         # Increment 
 
@@ -324,24 +321,23 @@ for thisTrial in trials:
         elif thisTrial['upDown'] == 'up' and len(dotArray) != maxDots:
             trialFailed = False
             dotIndex += dotSteps
-            
         elif thisTrial['upDown'] == 'down' and len(dotArray) != 0:
             trailFailed = False
             dotIndex -= dotSteps
 
-    trials.addData('TrialNo', trialCount)
+    trials.addData('TrailNo', TrailNo)
     trials.addData('Dots', dotsOnScreen)
     trials.addData('TrialType', thisTrial['upDown'])
     trials.addData('FailedTrial', str(trialFailed))
 
     dataFile.write('%s \t %s \t %s \t %i \t %s \t %f \t %i \t %i \t %s \n') %(info['Participant No'], info['Age'], 
-                                                                              info['Gender'], trialCount,
+                                                                              info['Gender'], trialNo,
                                                                               thisTrial['upDown'], thisTrial['sf'], 
                                                                               thisTrial['ori'], dotsOnScreen,
-                                                                              str(trialFailed))
+                                                                              str(failedTrial))
 
 # ('sub\t Age\t Gender\t trialNo\t trialType\t sf\t ori\t noDots\t failedTrial\n')
-    trialCount+=1
+
 
 dataFile.close()
 
