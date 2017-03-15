@@ -1,5 +1,4 @@
-from psychopy import visual, event, core, data, gui 
-from psychopy.tools import monitorunittools
+from psychopy import visual, event, core, data, gui
 from psychopy.iohub import launchHubServer
 import numpy as np
 import os
@@ -66,7 +65,7 @@ dataFileName = '%s\\%s.txt' %(dataDir, info['Participant No'])
 
 dataFile = open(dataFileName, 'w')
 
-psychopyFilename = '%s\\%s' %(dataDir ,info['Participant No'])
+psychopyFilename = '%s\\%s' %(dataDir, info['Participant No'])
 
 rivalExp = data.ExperimentHandler(name = 'Rivalry to Stable',
                                   extraInfo = info,
@@ -103,7 +102,7 @@ winB = visual.Window(
 mouse.setSystemCursorVisibility(False)
 
 ## Stimuli ##
- 
+
 
 def reverseWords(text):
     strLst = text.split() #splits on whitespace
@@ -114,6 +113,7 @@ def reverseWords(text):
 
     return backTogString
 
+
 def dotCoords(maxDots = 5000, radius = 300):
     ''' a function that generates coordinates of a circle 
         and pairs them with a color, either black or white
@@ -121,23 +121,23 @@ def dotCoords(maxDots = 5000, radius = 300):
 
     # Define some random coordinates and convert to x and y coordinates
     rad = radius
-    t = np.random.uniform(0.0, 2.0*np.pi, maxDots) # Angle between 0 and 2Pi (in radians)
+    t = np.random.uniform(0.0, 2.0 * np.pi, maxDots) # Angle between 0 and 2Pi (in radians)
     r = rad * np.sqrt(np.random.uniform(0.0, 1.0, maxDots)) # sqrt gets rid of clustering 
     x = r * np.cos(t)                                       # by making smaller numbers more 
     y = r * np.sin(t) #these convert to x,y from rads       # sparsely spaced, this technically 
                                                             # creates the opposite in that there 
                                                             # are more larger numbers but this 
                                                             # equates to an equilibrium
-    coords = np.stack((x,y), axis = 1) # stack the two arrays horizontally (column wise)
-    
+    coords = np.stack((x, y), axis = 1) # stack the two arrays horizontally (column wise)
+
     np.random.shuffle(coords)
-    
+
     # Define a list of colors and shuffle them 
     color_lists = []
-    for i in range(maxDots/2):
-        color_lists.append([-1,-1,-1])
-    for i in range(maxDots/2):
-        color_lists.append([1,1,1])
+    for i in range(maxDots / 2):
+        color_lists.append([-1, -1, -1])
+    for i in range(maxDots / 2):
+        color_lists.append([1, 1, 1])
 
     np.random.shuffle(color_lists)
 
@@ -155,10 +155,11 @@ def displayInstructions(text, acceptedKeys= None):
     instructB.draw()
     winA.flip()
     winB.flip()
-    key = kb.waitForPresses(keys = [' '])
+    kb.waitForPresses(keys = [' '])
 
     winA.flip()
     winB.flip()
+
 
 # Splash Screens
 
@@ -173,22 +174,22 @@ grate_L = visual.GratingStim(winA,
                              ori=45,
                              tex ='sin',
                              mask = 'circle', 
-                             size= radius*2, 
+                             size= radius * 2, 
                              sf=1, # Dont need to change this
                              contrast = 0.25, #Chosen 0.25
-                             color= (1,1,1),
+                             color= (1, 1, 1),
                              colorSpace = 'rgb',
                              units = 'pix',
                              autoLog=False)
-    
+
 grate_R = visual.GratingStim(winB, 
                              ori=-45,
                              tex ='sin',
                              mask = 'circle', 
-                             size=radius*2, 
+                             size=radius * 2, 
                              sf=1, # Dont need to change this
                              contrast = 0.25, #Chosen 0.25
-                             color= (1,1,1),
+                             color= (1, 1, 1),
                              colorSpace = 'rgb',
                              units = 'pix',
                              autoLog=False)
@@ -207,7 +208,7 @@ trialCount = 0
 for thisTrial in trials:
     # Setup
     trialCount +=1
-    
+
     print 'trial No: %i' %(trialCount)
     print 'trial SF: %s' %(thisTrial['sf'])
     print 'trial ORI: %s' %(thisTrial['ori'])
@@ -216,7 +217,7 @@ for thisTrial in trials:
     io.clearEvents('all')
     kb.clearEvents()
     event.clearEvents(eventType ='keyboard')
-    
+
     #Set sf
     grate_L.sf = thisTrial['sf']
     grate_R.sf = thisTrial['sf']
@@ -295,7 +296,7 @@ for thisTrial in trials:
 
         winA.flip()
         winB.flip()
-        
+
         events = kb.waitForPresses(keys = [' '])
 
     kb.clearEvents()
@@ -311,7 +312,7 @@ for thisTrial in trials:
         tmp_dotArray = np.array(dotArray[0:dotIndex])
         tmp_colArray = np.array(colorArray[0:dotIndex])
         dotsOnScreen = len(tmp_dotArray)
-        
+
         # Element Array Stims
 
         dot_stim_L = visual.ElementArrayStim(
@@ -400,8 +401,6 @@ for thisTrial in trials:
                                                                               thisTrial['upDown'], thisTrial['sf'], 
                                                                               thisTrial['ori'], dotsOnScreen,
                                                                               trialFailed))
-
-    trialCount+=1
 
 dataFile.close()
 
