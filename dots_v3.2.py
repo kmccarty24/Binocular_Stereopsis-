@@ -104,12 +104,15 @@ mouse.setSystemCursorVisibility(False)
 
 ## Stimuli ##
  
-splashTextRival = 'Please confirm rivalry'
-splashTextStable = 'Please confirm stability'
-splashText_L = visual.TextStim(winA, text = '', color = 'white', pos = (0, -350))
-splashText_R = visual.TextStim(winB, text = '', color = 'white', pos = (0, -350))
 
+def reverseWords(text):
+    strLst = text.split() #splits on whitespace
 
+    reversedString = [x for x in reversed(strLst)] # reverses the list
+
+    backTogString = ' '.join(reversedString) #joins with spaces 
+
+    return backTogString
 
 def dotCoords(maxDots = 5000, radius = 300):
     ''' a function that generates coordinates of a circle 
@@ -124,8 +127,7 @@ def dotCoords(maxDots = 5000, radius = 300):
     y = r * np.sin(t) #these convert to x,y from rads       # sparsely spaced, this technically 
                                                             # creates the opposite in that there 
                                                             # are more larger numbers but this 
-                                                            # equates to an equilibrium 
-    
+                                                            # equates to an equilibrium
     coords = np.stack((x,y), axis = 1) # stack the two arrays horizontally (column wise)
     
     np.random.shuffle(coords)
@@ -144,11 +146,10 @@ def dotCoords(maxDots = 5000, radius = 300):
 
 def displayInstructions(text, acceptedKeys= None):
 
-    reversedString = text[::-1]
+    instrString = reverseWords(text)
 
-    instructA = visual.TextStim(winA, text = reversedString, color = 'red')
-    instructB = visual.TextStim(winB, text = reversedString, color = 'red')
-
+    instructA = visual.TextStim(winA, text = instrString, color = 'red')
+    instructB = visual.TextStim(winB, text = instrString, color = 'red')
 
     instructA.draw()
     instructB.draw()
@@ -159,32 +160,38 @@ def displayInstructions(text, acceptedKeys= None):
     winA.flip()
     winB.flip()
 
+# Splash Screens
+
+splashTextRival = reverseWords('Please confirm rivalry')
+splashTextStable = reverseWords('Please confirm stability')
+splashText_L = visual.TextStim(winA, text = '', color = 'white', pos = (0, -350))
+splashText_R = visual.TextStim(winB, text = '', color = 'white', pos = (0, -350))
 
 # Gratings
 
 grate_L = visual.GratingStim(winA, 
-                            ori=45,
-                            tex ='sin',
-                            mask = 'circle', 
-                            size= radius*2, 
-                            sf=1, # Dont need to change this
-                            contrast = 0.25, #Chosen 0.25
-                            color= (1,1,1),
-                            colorSpace = 'rgb',
-                            units = 'pix',
-                            autoLog=False)
+                             ori=45,
+                             tex ='sin',
+                             mask = 'circle', 
+                             size= radius*2, 
+                             sf=1, # Dont need to change this
+                             contrast = 0.25, #Chosen 0.25
+                             color= (1,1,1),
+                             colorSpace = 'rgb',
+                             units = 'pix',
+                             autoLog=False)
     
 grate_R = visual.GratingStim(winB, 
-                            ori=-45,
-                            tex ='sin',
-                            mask = 'circle', 
-                            size=radius*2, 
-                            sf=1, # Dont need to change this
-                            contrast = 0.25, #Chosen 0.25
-                            color= (1,1,1),
-                            colorSpace = 'rgb',
-                            units = 'pix',
-                            autoLog=False)
+                             ori=-45,
+                             tex ='sin',
+                             mask = 'circle', 
+                             size=radius*2, 
+                             sf=1, # Dont need to change this
+                             contrast = 0.25, #Chosen 0.25
+                             color= (1,1,1),
+                             colorSpace = 'rgb',
+                             units = 'pix',
+                             autoLog=False)
 
 
 
@@ -240,8 +247,8 @@ for thisTrial in trials:
 
     #PUT IN A SPLASH SCREEN (TEXTSTIM)
     if thisTrial['upDown'] == 'up':
-        splashText_L.text = splashTextRival[::-1]
-        splashText_R.text = splashTextRival[::-1]
+        splashText_L.text = splashTextRival
+        splashText_R.text = splashTextRival
 
         grate_L.draw()
         grate_R.draw()
@@ -276,8 +283,8 @@ for thisTrial in trials:
                                         elementMask ="circle",
                                         sizes = dotSize)
 
-        splashText_L.text = splashTextStable[::-1]
-        splashText_R.text = splashTextStable[::-1]
+        splashText_L.text = splashTextStable
+        splashText_R.text = splashTextStable
 
         grate_L.draw()
         grate_R.draw()
@@ -329,7 +336,7 @@ for thisTrial in trials:
                                             elementMask ="circle",
                                             sizes = dotSize)
 
-        for frameN in range(30): 
+        for frameN in range(60): #30 frames @ 60Hz or 60 frames @ 120Hz
             events = kb.getKeys()
 
             for kbe in events:
