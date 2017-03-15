@@ -34,7 +34,7 @@ if not dlg.OK: #did they push ok?
     core.quit()
 
 radius = 300
-dotSize = 5
+dotSize = 2
 dotSteps = info['dotSteps']
 maxDots = info['Max Dots']
 
@@ -231,9 +231,9 @@ for thisTrial in trials:
         grate_R.ori = 0
     elif thisTrial['ori'] == 45 and thisTrial['leftRight'] == 1:
         grate_L.ori = 45
-        grate_R.ori = 270
+        grate_R.ori = 135
     elif thisTrial['ori'] == 45 and thisTrial['leftRight'] == 0:
-        grate_L.ori = 270
+        grate_L.ori = 135
         grate_R.ori = 45
 
 
