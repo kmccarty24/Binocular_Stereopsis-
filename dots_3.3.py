@@ -9,8 +9,10 @@ import os
 
 # Exception Class
 
+
 class DuplicateError(Exception):
     pass
+
 
 ## -- ## Working Directories ## -- ##
 
@@ -29,8 +31,8 @@ dataDir = os.path.join(wd, 'data')
 
 info = {}
 info['VERSION'] = ['', 'SMALL', 'LARGE']
-info['Participant Forename'] = ''
-info['Particicpant Surname'] = ''
+info['Participant Forename'] = 'Kristofor'
+info['Participant Surname'] = 'McCarty'
 info['runNo'] = ''
 info['Age'] = 99
 info['Gender'] = ['Male', 'Female', ' Other', 'Prefer Not To Say']
@@ -45,10 +47,10 @@ if len(info['runNo']) == 0 or len(info['VERSION']) == 0 or len(info['Participant
 
 # Create code 
 
-pCode = '%s%s%s%s' %(info['Participant Forname'][0], info['Participant Forname'][-1], 
+pCode = '%s%s%s%s' %(info['Participant Forename'][0], info['Participant Forename'][-1], 
                      info['Participant Surname'][0], info['Participant Surname'][-1])
 
-fileCode = '%s%s%s%s%i_v%s_RunN%i' %(info['Participant Forname'][0], info['Participant Forname'][-1], 
+fileCode = '%s%s%s%s_v%s_RunN%i' %(info['Participant Forename'][0], info['Participant Forename'][-1], 
                                      info['Participant Surname'][0], info['Participant Surname'][-1],
                                      info['VERSION'], int(info['runNo']))
 
@@ -58,11 +60,11 @@ dateTime = data.getDateStr()
 
 
 #Data Path
-dataFileName = '%s\\%s' %(dataDir, fileCode)
+dataFileName = '%s\\%s.txt' %(dataDir, fileCode)
 
 #Check File Exists
 if os.path.isfile(dataFileName):
-    raise Duplicate('Duplicate Data Filename Found, %s' %(dataFileName))
+    raise DuplicateError('Duplicate Data Filename Found, %s' %(dataFileName))
 
 dataFile = open(dataFileName, 'w')
 
@@ -108,8 +110,8 @@ io = launchHubServer(iohub_config_name = 'iohub_config.yaml')
 ## Hardware ##
 
 kb = io.devices.keyboard
-left_display = io.devices.LeftDisplay
-right_display = io.devices.RightDisplay
+left_display = io.devices.LeftMonitor
+right_display = io.devices.RightMonitor
 mouse = io.devices.mouse
 
 print left_display.getIndex()
@@ -122,15 +124,15 @@ winA = visual.Window(
         monitor = 'LeftDisplay',
         size = (1280, 1024), #left_display.getPixelResolution(),
         units = 'pix', 
-        fullscr = True,
+        fullscr = False,
         screen = 1, #(left_display.getIndex()- 1) current set 1
         color = (0, 0, 0))
 
 winB = visual.Window(
         monitor = 'RightDisplay',
-        size = (1280,1024), #right_display.getPixelResolution(),
+        size = (1280, 1024), #right_display.getPixelResolution(),
         units = 'pix',
-        fullscr = True,
+        fullscr = False,
         screen = 0, #right_display.getIndex() current set 0
         color = (0, 0, 0))
 
@@ -139,6 +141,7 @@ winB = visual.Window(
 mouse.setSystemCursorVisibility(False)
 
 ## Stimuli ##
+
 
 def dotCoords(maxDots = 5000, radius = 300):
     ''' a function that generates coordinates of a circle 
@@ -171,8 +174,6 @@ def dotCoords(maxDots = 5000, radius = 300):
 
 
 def displayInstructions(text, acceptedKeys= None):
-
-    instrString = reverseWords(text)
 
     instructA = visual.ImageStim(winA, image = 'Press Space.png')
     instructB = visual.ImageStim(winB, image = 'Press Space.png')
